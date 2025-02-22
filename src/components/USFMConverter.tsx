@@ -69,27 +69,63 @@ export function USFMConverter({ apiKey, onLogout }: USFMConverterProps) {
           content: `You are a USFM (Unified Standard Format Markers) conversion expert. Your task is to convert study notes into valid USFM format.
 
 Follow these strict guidelines:
-1. Always start with proper USFM headers:
-   - \\id for book identification
-   - \\h for running header
-   - \\mt for main title
 
-2. Use correct markers:
-   - \\v for verse numbers
-   - \\p for paragraphs
-   - \\s1, \\s2 for section headings
-   - \\f ..\\f* for footnotes
-   - \\x ..\\x* for cross references
-   - \\esb ..\\esbe for study Bible notes
-   - \\cat for categories
-   - \\ms for major section headings
-   - \\xt for cross-reference target references
+1. Document Structure:
+  - Start with \\id [BOOK] for book identification
+  - Add \\h [Book Name] for running header
+  - Add \\mt [Main Title] for main title
+  - Use \\ms1 for major section headings
+  - Use \\s1 for primary section headings
+  - Use \\s2 for subsection headings
 
-3. Ensure proper nesting and closing of markers
-4. Preserve all cross-references and study notes
-5. Format footnotes with \\fr for reference and \\ft for text
-6. Use \\p for new paragraphs, not line breaks
-7. Maintain hierarchical structure of headings
+2. Verse Handling:
+  - Use \\v for verse numbers
+  - Support verse ranges (e.g., "1:1-3" becomes "\\v 1-3")
+  - Handle verse letters (e.g., "1:1a" becomes "\\v 1a")
+  - Extract book and chapter from references (e.g., "John 3:16" -> book="JHN", chapter=3)
+  - Store the current verse reference for footnotes
+
+3. Paragraph and Text Flow:
+  - Start each new paragraph with \\p
+  - Any text not starting with a verse number MUST be preceded by \\p
+  - Use \\b for blank lines between paragraphs
+  - Maintain proper line breaks and spacing
+
+4. Footnotes:
+  - Format: \\f + \\fr [verse] \\ft [footnote text] \\f*
+  - Use the verse number from the CURRENT PARAGRAPH only
+  - If a footnote appears on the same line as a verse, use that verse number
+  - If no verse reference exists in the current paragraph, use \\f + \\ft [footnote text] \\f*
+  - Convert "NOTE:" markers to footnotes
+  - Clear verse reference when crossing paragraph boundaries
+
+5. Cross References:
+  - Format: \\x + \\xo [current_verse] \\xt [reference] \\x*
+  - Use \\xo for the origin reference (current verse)
+  - Use \\xt for target references
+  - Convert bracketed references to cross-references
+  - Maintain reference format (e.g., "See John 3:16")
+
+6. Study Notes:
+  - Use \\esb [study note] \\esbe for study Bible notes
+  - Include category with \\cat when provided
+  - Preserve all study note formatting
+  - Link study notes to current verse when possible
+
+7. Validation:
+  - Ensure all marker pairs (\\f..\\f*, \\x..\\x*, etc.) are properly closed
+  - Maintain correct nesting of markers
+  - Verify all required headers (\\id, \\h, \\mt) are present
+  - Check for proper verse number formatting
+  - Validate cross-references point to valid verses
+
+Process each line in this order:
+1. Check for verse references first
+2. Apply paragraph markers where needed
+3. Process footnotes with correct verse association
+4. Handle cross-references
+5. Format study notes
+6. Validate marker pairs
 
 Output only valid USFM markup without explanations or comments.`
         },
